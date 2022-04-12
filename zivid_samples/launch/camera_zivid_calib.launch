@@ -1,0 +1,7 @@
+<launch>
+
+    <node name="zivid_camera" pkg="zivid_camera" type="zivid_camera_node" ns="zivid_camera" output="screen"/>
+    <node name="pub_img_calib_cpp" pkg="zivid_samples" type="pub_img_calib_cpp" ns="zivid_camera" output="screen"/>
+    <node pkg="tf2_ros" type="static_transform_publisher" name="tf_camera" args="0 0 0 0 0 0  base_link zivid_optical_frame" />
+    
+</launch>
