@@ -225,7 +225,7 @@ ZividCamera::ZividCamera(ros::NodeHandle& nh, ros::NodeHandle& priv)
   points_xyz_publisher_ =
       nh_.advertise<sensor_msgs::PointCloud2>("points/xyz", 1, use_latched_publisher_for_points_xyz_);
   points_xyzrgba_publisher_ =
-      nh_.advertise<sensor_msgs::PointCloud2>("points/xyzrgba", 1, use_latched_publisher_for_points_xyzrgba_);
+      nh_.advertise<sensor_msgs::PointCloud2>("points/xyzrgb", 1, use_latched_publisher_for_points_xyzrgba_);
   color_image_publisher_ =
       image_transport_.advertiseCamera("color/image_color", 1, use_latched_publisher_for_color_image_);
   depth_image_publisher_ = image_transport_.advertiseCamera("depth/image", 1, use_latched_publisher_for_depth_image_);
@@ -480,7 +480,7 @@ void ZividCamera::publishFrame(Zivid::Frame&& frame)
     }
     if (publish_points_xyzrgba)
     {
-      publishPointCloudXYZRGBA(header, point_cloud);
+      publishPointCloudXYZRGB(header, point_cloud);
     }
     if (publish_color_img || publish_depth_img || publish_snr_img)
     {
@@ -569,27 +569,60 @@ void ZividCamera::publishPointCloudXYZ(const std_msgs::Header& header, const Ziv
   points_xyz_publisher_.publish(msg);
 }
 
-void ZividCamera::publishPointCloudXYZRGBA(const std_msgs::Header& header, const Zivid::PointCloud& point_cloud)
+void ZividCamera::publishPointCloudXYZRGB(const std_msgs::Header& header, const Zivid::PointCloud& point_cloud)
 {
   ROS_DEBUG_STREAM("Publishing " << points_xyzrgba_publisher_.getTopic());
 
-  auto msg = boost::make_shared<sensor_msgs::PointCloud2>();
-  fillCommonMsgFields(*msg, header, point_cloud.width(), point_cloud.height());
-  msg->fields.reserve(4);
-  msg->fields.push_back(createPointField("x", 0, sensor_msgs::PointField::FLOAT32, 1));
-  msg->fields.push_back(createPointField("y", 4, sensor_msgs::PointField::FLOAT32, 1));
-  msg->fields.push_back(createPointField("z", 8, sensor_msgs::PointField::FLOAT32, 1));
-  msg->fields.push_back(createPointField("rgba", 12, sensor_msgs::PointField::FLOAT32, 1));
-  msg->is_dense = false;
+  ////////////////////////////////////////////////////////////////////////////////
 
-  // Note that the "rgba" field is actually byte order "bgra" on little-endian systems. For this
-  // reason we use the Zivid BGRA type.
-  using ZividDataType = Zivid::PointXYZColorBGRA;
-  msg->point_step = sizeof(ZividDataType);
-  msg->row_step = msg->point_step * msg->width;
-  msg->data.resize(msg->row_step * msg->height);
-  point_cloud.copyData<ZividDataType>(reinterpret_cast<ZividDataType*>(msg->data.data()));
-  points_xyzrgba_publisher_.publish(msg);
+  pcl::PointCloud<pcl::PointXYZRGB> *xyzCloud = new pcl::PointCloud<pcl::PointXYZRGB>;
+  pcl::PointCloud<pcl::PointXYZRGB>::Ptr xyzCloudPtr (xyzCloud);
+  xyzCloud->width = point_cloud.width();
+  xyzCloud->height = point_cloud.height();
+  xyzCloud->is_dense = false;
+  xyzCloud->points.resize(point_cloud.size());
+
+
+  const auto data = point_cloud.copyData<Zivid::PointXYZColorRGBA>();
+  for(size_t i = 0; i < point_cloud.size(); ++i)
+  {
+      xyzCloud->points[i].x = data(i).point.x; // NOLINT(cppcoreguidelines-pro-type-union-access)
+      xyzCloud->points[i].y = data(i).point.y; // NOLINT(cppcoreguidelines-pro-type-union-access)
+      xyzCloud->points[i].z = data(i).point.z; // NOLINT(cppcoreguidelines-pro-type-union-access)
+      xyzCloud->points[i].r = data(i).color.r; // NOLINT(cppcoreguidelines-pro-type-union-access)
+      xyzCloud->points[i].g = data(i).color.g; // NOLINT(cppcoreguidelines-pro-type-union-access)
+      xyzCloud->points[i].b = data(i).color.b; // NOLINT(cppcoreguidelines-pro-type-union-access)
+  }
+
+  xyzCloud->header.frame_id = header.frame_id;
+
+
+  // declare the output variable instances
+  sensor_msgs::PointCloud2 output;
+  pcl::PCLPointCloud2 outputPCL;
+
+  pcl::toPCLPointCloud2( *xyzCloud ,outputPCL);
+
+  // Convert to ROS data type
+  pcl_conversions::fromPCL(outputPCL , output);
+
+  // auto msg = boost::make_shared<sensor_msgs::PointCloud2>();
+  // fillCommonMsgFields(*msg, header, point_cloud.width(), point_cloud.height());
+  // msg->fields.reserve(4);
+  // msg->fields.push_back(createPointField("x", 0, sensor_msgs::PointField::FLOAT32, 1));
+  // msg->fields.push_back(createPointField("y", 4, sensor_msgs::PointField::FLOAT32, 1));
+  // msg->fields.push_back(createPointField("z", 8, sensor_msgs::PointField::FLOAT32, 1));
+  // msg->fields.push_back(createPointField("rgba", 12, sensor_msgs::PointField::FLOAT32, 1));
+  // msg->is_dense = false;
+
+  // // Note that the "rgba" field is actually byte order "bgra" on little-endian systems. For this
+  // // reason we use the Zivid BGRA type.
+  // using ZividDataType = Zivid::PointXYZColorBGRA;
+  // msg->point_step = sizeof(ZividDataType);
+  // msg->row_step = msg->point_step * msg->width;
+  // msg->data.resize(msg->row_step * msg->height);
+  // point_cloud.copyData<ZividDataType>(reinterpret_cast<ZividDataType*>(msg->data.data()));
+  points_xyzrgba_publisher_.publish(output);
 }
 
 void ZividCamera::publishColorImage(const std_msgs::Header& header, const sensor_msgs::CameraInfoConstPtr& camera_info,

@@ -1,5 +1,10 @@
 <launch>
 
     <node name="zivid_camera" pkg="zivid_camera" type="zivid_camera_node" ns="zivid_camera" output="screen"/>
+
+     <group ns="setup1">
+    	<node name="zivid_bridge_node" pkg="rpwc_bridge" type="zivid_bridge_node" output="screen"/>
+	</group> 
+
     
 </launch>

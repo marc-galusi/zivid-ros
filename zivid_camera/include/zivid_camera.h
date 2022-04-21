@@ -15,6 +15,10 @@
 #include <Zivid/Application.h>
 #include <Zivid/Camera.h>
 #include <Zivid/Image.h>
+#include <pcl_conversions/pcl_conversions.h>
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+
 
 namespace Zivid
 {
@@ -59,7 +63,7 @@ private:
   bool shouldPublishNormalsXYZ() const;
   std_msgs::Header makeHeader();
   void publishPointCloudXYZ(const std_msgs::Header& header, const Zivid::PointCloud& point_cloud);
-  void publishPointCloudXYZRGBA(const std_msgs::Header& header, const Zivid::PointCloud& point_cloud);
+  void publishPointCloudXYZRGB(const std_msgs::Header& header, const Zivid::PointCloud& point_cloud);
   void publishColorImage(const std_msgs::Header& header, const sensor_msgs::CameraInfoConstPtr& camera_info,
                          const Zivid::PointCloud& point_cloud);
   void publishColorImage(const std_msgs::Header& header, const sensor_msgs::CameraInfoConstPtr& camera_info,

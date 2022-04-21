@@ -28,6 +28,8 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   image_transport
   nodelet
+  pcl_conversions
+  pcl_ros
 )
 
 find_package(Boost REQUIRED COMPONENTS filesystem)
