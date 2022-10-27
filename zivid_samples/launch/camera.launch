@@ -1,0 +1,5 @@
+<launch>
+
+    <node name="zivid_camera" pkg="zivid_camera" type="zivid_camera_node" ns="zivid_camera" output="screen"/>
+    
+</launch>

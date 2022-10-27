@@ -10,6 +10,7 @@
 #include <zivid_camera/LoadSettingsFromFile.h>
 
 #include <ros/ros.h>
+#include <ros/package.h>
 
 #define CHECK(cmd)                                                                                                     \
   do                                                                                                                   \
@@ -63,16 +64,18 @@ void on_info_color(const sensor_msgs::CameraInfo::ConstPtr& msg)
 
 }  // namespace
 
-bool callback_zivid_pub_img(std_srvs::SetBool::Request  &req, std_srvs::SetBool::Response &res)
+bool callback_zivid_pub_img(std_srvs::SetBool::Request &req, std_srvs::SetBool::Response &res)
 {
   if(req.data)
   {
+    std::string path = ros::package::getPath("zivid_samples");
+    path = path + "/config/only_2d_settings.yml";
+    std::cout << "Got config from path: " << path << std::endl;
     zivid_camera::LoadSettingsFromFile file;
-    file.request.file_path = "/home/nuk1/catkin_ws/src/zivid-ros/zivid_samples/test.yml";
+    file.request.file_path = path;
     if (load_settings_.call(file)) ROS_INFO("Loading image settings");
     else ROS_ERROR("Failed to call service load_settings_from_file");  
     capture();
-    
   }
   else
   {
@@ -99,7 +102,7 @@ int main(int argc, char** argv)
   ros::Rate r_30HZ(30);
 
   auto image_color_sub = n.subscribe("/zivid_camera/color/image_color", 1, on_image_color);
-  auto info_color_sub = n.subscribe("/zivid_camera/color/camera_info", 1, on_info_color);
+  auto info_color_sub  = n.subscribe("/zivid_camera/color/camera_info", 1, on_info_color);
 
   ros::Publisher image_color_pub = n.advertise<sensor_msgs::Image>("/zivid/color/image_rect_color", 1);
   ros::Publisher info_color_pub = n.advertise<sensor_msgs::CameraInfo>("/zivid/color/camera_info", 1);
