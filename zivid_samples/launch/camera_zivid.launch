@@ -3,8 +3,8 @@
     <node name="zivid_camera" pkg="zivid_camera" type="zivid_camera_node" ns="zivid_camera" output="screen"/>
 
      <group ns="setup1">
-       	<param name="imagesettings" value="/home/nuk1/Zivid/only_2d_settings.yml" />
-  		<param name="cloudsettings" value="/home/nuk1/Zivid/gofa_settings.yml" />
+       	<param name="imagesettings" value="only_2d_settings.yml" />
+  		<param name="cloudsettings" value="gofa_settings.yml" />
 
     	<node name="zivid_bridge_node" pkg="rpwc_bridge" type="zivid_bridge_node" output="screen"/>
 	</group> 

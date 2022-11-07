@@ -1,5 +1,7 @@
 #include "zivid_camera.h"
 
+#include <ros/package.h>
+
 #include <sensor_msgs/point_cloud2_iterator.h>
 #include <sensor_msgs/image_encodings.h>
 #include <sensor_msgs/distortion_models.h>
@@ -426,7 +428,9 @@ bool ZividCamera::loadSettingsFromFileServiceHandler(LoadSettingsFromFile::Reque
                                                      LoadSettingsFromFile::Response&)
 {
   ROS_DEBUG_STREAM(__func__ << ": Request: " << req);
-  capture_settings_controller_->setZividSettings(Zivid::Settings{ req.file_path.c_str() });
+  std::string package_path = ros::package::getPath("zivid_samples");
+  std::string file_path = package_path + "/config/" + req.file_path;
+  capture_settings_controller_->setZividSettings(Zivid::Settings{ file_path.c_str() });
   return true;
 }
 
