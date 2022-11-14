@@ -68,8 +68,7 @@ bool callback_zivid_pub_img(std_srvs::SetBool::Request &req, std_srvs::SetBool::
 {
   if(req.data)
   {
-    std::string path = ros::package::getPath("zivid_samples");
-    path = path + "/config/only_2d_settings.yml";
+    std::string path = "only_2d_settings.yml";
     std::cout << "Got config from path: " << path << std::endl;
     zivid_camera::LoadSettingsFromFile file;
     file.request.file_path = path;
